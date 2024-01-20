@@ -1,0 +1,4 @@
+﻿  OpenGLSession0.cpp
+F:\OpenGLProjects\Sprial\First-OpenGL-Project\OpenGLSession0\OpenGLSession0.cpp(233,55): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  OpenGLSession0.vcxproj -> F:\OpenGLProjects\Sprial\First-OpenGL-Project\x64\Debug\OpenGLSession0.exe
