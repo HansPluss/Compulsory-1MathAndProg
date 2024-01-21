@@ -11,15 +11,19 @@ out vec3 color;
 // Controls the scale of the vertices
 uniform float scale;
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 proj;
+uniform mat4 camMatrix;
+//uniform mat4 model;
+//uniform mat4 view;
+//uniform mat4 proj;
+
+
 
 
 void main()
 {
 	// Outputs the positions/coordinates of all vertices
-	gl_Position = proj * view * model * vec4(aPos,1.0);
+	gl_Position = camMatrix * vec4(aPos,1.0);
+	//gl_Position = proj * view * model * vec4(aPos,1.0);
 	// Assigns the colors from the Vertex Data to "color"
 	color = aColor;
 }

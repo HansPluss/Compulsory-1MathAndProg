@@ -13,6 +13,7 @@
 #include "Resources/Shaders/VAO.h"
 #include "Resources/Shaders/VBO.h"
 #include "Resources/Shaders/EBO.h"
+#include "Camera.h"
 
 
 const unsigned int width = 800;
@@ -105,7 +106,33 @@ void CreateArchimedeanSpiral(std::vector<Vertex>& verticesSpiral, float a, float
 		
 	}
 }
+void CreateGraphFromFunction(std::vector<Vertex>& verticesgraph,float c , int iterations, const char* filename) {
+	for (int i = 1; i <= iterations; ++i) {
+		float t = static_cast<float>(i);
+		float n = 0.05f;
+		float x = i * n;
+		float y = x * x * x + 2 * x * x;
+		float z = c;
+	
 
+		
+
+		Vertex vertex;
+		vertex.x = x;
+		vertex.y = y;
+		vertex.z = z;
+		vertex.r = 0.0f;
+		vertex.g = 1.0f;
+		vertex.b = std::abs(z) / (c * iterations);  // Adjust for coloring effect
+
+		verticesgraph.push_back(vertex);
+		writeToFile(filename, vertex.x, vertex.y, vertex.z,vertex.r, vertex.g, vertex.b);
+
+	}
+
+	
+
+}
 int main()
 {
 	// Initialize GLFW
@@ -137,18 +164,19 @@ int main()
 	// In this case the viewport goes from x = 0, y = 0, to x = 800, y = 800
 	glViewport(0, 0, width, height);
 	std::vector<Vertex> verticesSpiral;
-	Readfile("spiraldata.txt", verticesSpiral);
+	//Readfile("spiraldata.txt", verticesSpiral);
 	float a = 0.1f;  // Adjust these parameters accordingly
 	float b = 1.1f;
-	float c = 0.10f;
+	float c = 0.5f;
 	float angularFrequency = 3.1f;
-	int iterations = 50;
+	int iterations = 5000;
 
 	const char* outputFileName = "spiraldata.txt";
+	const char* outputFileGraph = "grahdata.txt";
 	
 
-	//CreateArchimedeanSpiral(verticesSpiral, a, b, c, angularFrequency, iterations,outputFileName);
-
+	CreateArchimedeanSpiral(verticesSpiral, a, b, c, angularFrequency, iterations,outputFileName);
+	//CreateGraphFromFunction(verticesSpiral, c,iterations, outputFileGraph);
 
 
 	// Generates Shader object using shaders defualt.vert and default.frag
@@ -186,7 +214,7 @@ int main()
 	VBO_Spiral.Unbind();
 
 	GLuint uniID = glGetUniformLocation(shaderProgram.ID, "scale");
-	float scaleValue = 1200.0f;
+	float scaleValue = 100.0f;
 	
 	// Variables that help the rotation of the pyramid
 	float rotation = 0.0f;
@@ -195,6 +223,8 @@ int main()
 	// Enables the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
 
+	
+	Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -205,29 +235,34 @@ int main()
 		// Tell OpenGL which Shader Program we want to use
 		shaderProgram.Activate();
 
+		camera.Inputs(window);
+		camera.Matrix(45.0f, 0.1f, 100.0f, shaderProgram, "camMatrix");
+
+
 		double crntTime = glfwGetTime();
 		if (crntTime - prevTime >= 1 / 60) {
 			rotation += 0.09f;
 			prevTime = crntTime;
 		}
 
-		glm::mat4 model = glm::mat4(1.0f);
-		glm::mat4 view = glm::mat4(1.0f);
-		glm::mat4 proj = glm::mat4(1.0f);
+		//glm::mat4 model = glm::mat4(1.0f);
+		//glm::mat4 view = glm::mat4(1.0f);
+		//glm::mat4 proj = glm::mat4(1.0f);
 
-		model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
-		view = glm::translate(view, glm::vec3(0.0f, -0.5f, -2.0f));
-		proj = glm::perspective(glm::radians(45.0f), (float)width / height, 0.1f, 100.0f);
+		//model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
+		//view = glm::translate(view, glm::vec3(0.0f, -0.5f, -2.0f));
+		////proj = glm::ortho(0.0f, (float)width, 0.0f, (float)height, -1.0f, 1.0f);
+		//proj = glm::perspective(glm::radians(45.0f), (float)width / height, 0.1f, 100.0f);
 
-		int modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		int viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-		int projLoc = glGetUniformLocation(shaderProgram.ID, "proj");
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+		//int modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
+		//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		//int viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
+		//glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+		//int projLoc = glGetUniformLocation(shaderProgram.ID, "proj");
+		//glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
 
 		glUniform1f(uniID, scaleValue);
-		// Bind the VAO so OpenGL knows to use it
+		 //Bind the VAO so OpenGL knows to use it
 		VAO1.Bind();
 		// Draw primitives, number of vertices, starting index
 		glDrawArrays(GL_LINE_STRIP, 0, verticesSpiral.size());
@@ -238,9 +273,13 @@ int main()
 		glfwPollEvents();
 	}
 
-	/*std::ofstream clearFile(outputFileName);
-	clearFile.close();*/
+	std::ofstream clearFile(outputFileName);
+	clearFile.close();
 	
+
+	//std::ofstream clearFile(outputFileGraph);
+	//clearFile.close();
+
 	// Delete all the objects we've created
 	VAO1.Delete();
 	VBO_Spiral.Delete();
