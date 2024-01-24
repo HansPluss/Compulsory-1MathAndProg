@@ -18,13 +18,14 @@
 
 const unsigned int width = 800;
 const unsigned int height = 800;
-
+using namespace std;
 struct Vertex {
     float x, y, z;
     float r, g, b;
+	
 };
 
-// Vertices coordinates
+// Vertices coordinates for pyramid, irrelevant to spiral
 GLfloat vertices[] =
 { //     COORDINATES     /        COLORS     
 	-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,
@@ -70,10 +71,15 @@ void writeToFile(const char* fileName, double x, double y, double z, double r, d
 void Readfile(const char* fileName, std::vector<Vertex>& verticesSpiral) {
 	std::ifstream inputFile(fileName);
 	if (inputFile.is_open()) {
+
+
+		std::string line;
+		std::getline(inputFile, line);
 		Vertex vertex;
 		char comma; // to capture the commas in the file
 
-		while (inputFile >> vertex.x >> comma >> vertex.y >> comma >> vertex.z >> comma >> vertex.r >> comma >> vertex.g >> comma >> vertex.b) {
+		while (inputFile >> vertex.x >> comma >> vertex.y >> comma >> vertex.z >> comma 
+			>> vertex.r >> comma >> vertex.g >> comma >> vertex.b) {
 			verticesSpiral.push_back(vertex);
 		}
 
@@ -88,7 +94,7 @@ void Readfile(const char* fileName, std::vector<Vertex>& verticesSpiral) {
 }
 void CreateArchimedeanSpiral(std::vector<Vertex>& verticesSpiral, float a, float b, float c, float angularFrequency, float iterations, const char* filename) {
 	for (int i = 0; i <= iterations; ++i) {
-		float t = static_cast<float>(i);
+		float t = static_cast<float>(i); // to vary the angle of the spiral
 		float x = a * std::cos(angularFrequency * t);
 		float y = b * std::sin(angularFrequency * t);
 		float z = c * t;
@@ -97,32 +103,45 @@ void CreateArchimedeanSpiral(std::vector<Vertex>& verticesSpiral, float a, float
 		vertex.x = x;
 		vertex.y = y;
 		vertex.z = z;
-		vertex.r = 0.0f;
-		vertex.g = 0.0f;
+		if (y < 0) {
+			vertex.r = 1.0f;
+			vertex.g = 0.0f;
+		}
+		else {
+			vertex.r = 0.0f;
+			vertex.g = 1.0f;
+		}
 		vertex.b = std::abs(z) / (c * iterations);  // Adjust for coloring effect
 
 		verticesSpiral.push_back(vertex);
-		//writeToFile(filename, vertex.x, vertex.y, vertex.z,vertex.r, vertex.g, vertex.b);
+		writeToFile(filename, vertex.x, vertex.y, vertex.z,vertex.r, vertex.g, vertex.b);
 		
 	}
 }
-void CreateGraphFromFunction(std::vector<Vertex>& verticesgraph,float c , int iterations, const char* filename) {
-	for (int i = 1; i <= iterations; ++i) {
+void CreateGraphFromFunction(std::vector<Vertex>& verticesgraph,float c , int iterations, const char* filename, int start) {
+	for (int i = start; i <= iterations; ++i) {
 		float t = static_cast<float>(i);
 		float n = 0.05f;
 		float x = i * n;
-		float y = x * x * x + 2 * x * x;
-		float z = c;
+		float y = sin(x);
+		float z = 0.0f;
 	
-
+		float df = cos(x);
 		
 
 		Vertex vertex;
 		vertex.x = x;
 		vertex.y = y;
 		vertex.z = z;
-		vertex.r = 0.0f;
-		vertex.g = 1.0f;
+		if (df < 0) {
+			vertex.r = 1.0f;
+			vertex.g = 0.0f;
+		}
+		else {
+			vertex.r = 0.0f;
+			vertex.g = 1.0f;
+		}
+		
 		vertex.b = std::abs(z) / (c * iterations);  // Adjust for coloring effect
 
 		verticesgraph.push_back(vertex);
@@ -132,6 +151,33 @@ void CreateGraphFromFunction(std::vector<Vertex>& verticesgraph,float c , int it
 
 	
 
+}
+void FunctionWithTwoVariables(std::vector<Vertex>& verticesgraph, int iterations, const char* filename) {
+
+	for (int i = -50; i <= iterations; ++i) {
+		
+		
+		float n = 0.01f;
+		float x = i * n;
+		for (int j = -50; j <= iterations; ++j) {
+			float y = j * n;
+			//float z = sin(cos(tan(x))) * sin(cos(tan(y)));
+			float z = x * y;
+
+
+			Vertex vertex;
+			vertex.x = x;
+			vertex.y = y;
+			vertex.z = z;
+			vertex.r = 0.0f;
+			vertex.g = 0.1 * abs(x);
+			vertex.b = 0.1 * abs(y);
+
+			verticesgraph.push_back(vertex);
+			//writeToFile(filename, vertex.x, vertex.y, vertex.z, vertex.r, vertex.g, vertex.b);
+
+		}
+	}
 }
 int main()
 {
@@ -162,23 +208,26 @@ int main()
 	gladLoadGL();
 	// Specify the viewport of OpenGL in the Window
 	// In this case the viewport goes from x = 0, y = 0, to x = 800, y = 800
-	glViewport(0, 0, width, height);
-	std::vector<Vertex> verticesSpiral;
-	//Readfile("spiraldata.txt", verticesSpiral);
-	float a = 0.1f;  // Adjust these parameters accordingly
-	float b = 1.1f;
-	float c = 0.5f;
-	float angularFrequency = 3.1f;
-	int iterations = 5000;
-
 	const char* outputFileName = "spiraldata.txt";
 	const char* outputFileGraph = "grahdata.txt";
+	const char* outputFileGraphTwoVar = "grahTwoVardata.txt";
+	
+	glViewport(0, 0, width, height);
+	std::vector<Vertex> verticesGraph;
+	Readfile("grahTwoVardata.txt", verticesGraph);
+	float a = 0.1f;  // Adjust these parameters accordingly
+	float b = 0.1f;
+	float c = 0.1f;
+	float angularFrequency = 5.1f;
+	int iterations = 50;
+	int start = -50;
+	
 	
 
-	CreateArchimedeanSpiral(verticesSpiral, a, b, c, angularFrequency, iterations,outputFileName);
-	//CreateGraphFromFunction(verticesSpiral, c,iterations, outputFileGraph);
-
-
+	//CreateArchimedeanSpiral(verticesGraph, a, b, c, angularFrequency, iterations,outputFileName);
+	//CreateGraphFromFunction(verticesGraph, c,iterations, outputFileGraph, start);
+	//FunctionWithTwoVariables(verticesGraph, iterations, outputFileGraphTwoVar);
+	
 	// Generates Shader object using shaders defualt.vert and default.frag
 	Shader shaderProgram("default.vert", "default.frag");
 
@@ -188,7 +237,7 @@ int main()
 	VAO VAO1;
 	VAO1.Bind();
 	std::vector<GLfloat> flattenedVertices;
-	for (const Vertex& vertex : verticesSpiral) {
+	for (const Vertex& vertex : verticesGraph) {
 		flattenedVertices.push_back(vertex.x);
 		flattenedVertices.push_back(vertex.y);
 		flattenedVertices.push_back(vertex.z);
@@ -201,7 +250,7 @@ int main()
 	
 
 	// Generates Vertex Buffer Object and links it to spiral vertices
-	VBO VBO_Spiral(flattenedVertices.data(), verticesSpiral.size() * sizeof(Vertex));
+	VBO VBO_Spiral(flattenedVertices.data(), verticesGraph.size() * sizeof(Vertex));
 	VAO1.LinkAttrib(VBO_Spiral, 0, 3, GL_FLOAT, 6 * sizeof(float), (void*)0);
 	VAO1.LinkAttrib(VBO_Spiral, 1, 3, GL_FLOAT, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 
@@ -265,21 +314,26 @@ int main()
 		 //Bind the VAO so OpenGL knows to use it
 		VAO1.Bind();
 		// Draw primitives, number of vertices, starting index
-		glDrawArrays(GL_LINE_STRIP, 0, verticesSpiral.size());
-		glLineWidth(20.0f);
+		glDrawArrays(GL_LINE_STRIP, 0, verticesGraph.size());
+		glLineWidth(5.0f);
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
 		// Take care of all GLFW events
 		glfwPollEvents();
 	}
 
-	std::ofstream clearFile(outputFileName);
-	clearFile.close();
 	
-
-	//std::ofstream clearFile(outputFileGraph);
-	//clearFile.close();
-
+	
+	ofstream updateFile(outputFileGraphTwoVar, ios::in | ios::out);
+	if (updateFile.is_open()) {
+		updateFile.seekp(0);
+		updateFile << "Number of Points: " << verticesGraph.size() << endl;
+		updateFile.close();
+	}
+	else {
+		cerr << "Error unable to update file" << endl;
+	}
+	
 	// Delete all the objects we've created
 	VAO1.Delete();
 	VBO_Spiral.Delete();
